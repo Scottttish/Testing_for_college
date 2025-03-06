@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тесты для преподавателей</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+
+        .main-containter {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .header .save-btn {
+            margin-top: 0;
+        }
+
+        .question {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header input {
+            width: 50%;
+            height: 25px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: rgb(205, 204, 204);
+        }
+
+        .question input {
+            width: 50%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: rgb(189, 189, 189);
+        }
+
+        .answers {
+            margin-top: 15px;
+        }
+
+        .answer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 80%;
+            margin: 5px 0;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .answer input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .answer input {
+            flex-grow: 1;
+            border: none;
+            padding: 5px;
+            background: transparent;
+        }
+
+        .add-answer {
+            margin-top: 25px;
+            color: blue;
+            cursor: pointer;
+        }
+
+        .save-btn {
+            margin-top: 20px;
+            background: #b3e5fc;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            float: right;
+        }
+
+        .add-question {
+            width: 100%;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .add-question button {
+            width: 100%;
+            max-width: 1200px;
+            padding: 15px;
+            background: #4caf50;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .question-item {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 1px solid #ddd;
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 50px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .modal-content .code {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .modal-content .copy-btn {
+            margin-left: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .modal-content .date-time {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .modal-content .date-time input {
+            width: 45%;
+        }
+
+        .modal-content .save-modal-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        .date-time-container {
+            display: flex;
+            gap: 20px;
+        }
+
+        .calendar-container {
+            width: 50%;
+        }
+
+        .time-container {
+            width: 45%;
+        }
+
+        .flatpickr-calendar {
+            font-family: Arial, sans-serif;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .flatpickr-day:hover {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-containter">
+    <div class="container">
+        <div class="header">
+            <input type="text" id="test-name" placeholder="Название теста...">
+            <button class="save-btn">Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<div class="add-question">
+    <button>+ Добавить вопрос</button>
+</div>
+
+<!-- Модальное окно -->
+<div class="modal" id="modal">
+    <div class="modal-content">
+        <div class="code">
+            Код: <span id="unique-code"></span>
+            <button class="copy-btn" id="copy-code">Копировать</button>
+        </div>
+
+        <div class="date-time-container">
+            <!-- Календарь -->
+            <div class="calendar-container">
+                <input type="date" id="appointment_date" placeholder="Выберите дату">
+            </div>
+
+            <!-- Время -->
+            <div class="time-container">
+                <div class="date-time">
+                    <label>Время начала:</label>
+                    <input type="time" id="start-time" placeholder="Время начала">
+                </div>
+                <div class="date-time">
+                    <label>Время окончания:</label>
+                    <input type="time" id="end-time" placeholder="Время окончания">
+                </div>
+            </div>
+        </div>
+
+        <button class="save-modal-btn" id="save-modal-btn">Сохранить</button>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const addQuestionBtn = document.querySelector(".add-question button");
+    const saveBtn = document.querySelector(".save-btn");
+    const modal = document.getElementById("modal");
+    const uniqueCode = document.getElementById("unique-code");
+    const copyBtn = document.getElementById("copy-code");
+    const saveModalBtn = document.getElementById("save-modal-btn");
+
+    flatpickr("#appointment_date", {
+        dateFormat: "Y-m-d",
+        inline: true,
+    });
+
+    addQuestionBtn.addEventListener("click", function () {
+        const questionContainer = document.createElement("div");
+        questionContainer.classList.add("question-item");
+        questionContainer.style.marginTop = "20px";
+
+        questionContainer.innerHTML = `
+            <div class="header">
+                <div class="question">
+                    <label>Вопрос:</label>
+                    <input type="text" class="question-text" placeholder="Введите вопрос">
+                </div>
+                <button class="delete-question">❌</button>
+            </div>
+            <div class="answers">
+                <div class="answer">
+                    <input type="radio" class="answer-radio" name="is_correct">
+                    <label>A</label>
+                    <input type="text" class="answer-input" placeholder="Ответ">
+                    <button class="delete-answer">❌</button>
+                </div>
+                <div class="add-answer">+ Добавить ответ</div>
+            </div>
+        `;
+
+        document.body.insertBefore(questionContainer, addQuestionBtn.parentNode);
+
+        questionContainer.querySelector(".delete-question").addEventListener("click", function () {
+            questionContainer.remove();
+        });
+
+        questionContainer.querySelector(".add-answer").addEventListener("click", function () {
+            const answerCount = questionContainer.querySelectorAll(".answer").length;
+            const newAnswer = document.createElement("div");
+            newAnswer.classList.add("answer");
+            const nextLetter = String.fromCharCode(65 + answerCount);
+            newAnswer.innerHTML = `
+                <input type="radio" class="answer-radio" name="is_correct">
+                <label>${nextLetter}</label>
+                <input type="text" class="answer-input" placeholder="Ответ">
+                <button class="delete-answer">❌</button>
+            `;
+            questionContainer.querySelector(".answers").insertBefore(newAnswer, this);
+
+            if (nextLetter === 'F') {
+                questionContainer.querySelector(".add-answer").style.display = 'none';
+            }
+        });
+
+        questionContainer.addEventListener("click", function (e) {
+            if (e.target.classList.contains("delete-answer")) {
+                e.target.closest(".answer").remove();
+
+                const answers = questionContainer.querySelectorAll(".answer");
+                answers.forEach((answer, index) => {
+                    const letter = String.fromCharCode(65 + index);
+                    answer.querySelector("label").textContent = letter;
+                });
+
+                if (answers.length < 6) {
+                    questionContainer.querySelector(".add-answer").style.display = 'block';
+                }
+            }
+        });
+    });
+
+    saveBtn.addEventListener("click", function () {
+        modal.style.display = "block";
+        uniqueCode.textContent = Math.random().toString(36).substring(7);
+    });
+
+    window.addEventListener("click", function (e) {
+        if (e.target === modal) {
+            modal.style.display = "none";
+        }
+    });
+
+    copyBtn.addEventListener("click", function () {
+        navigator.clipboard.writeText(uniqueCode.textContent);
+    });
+
+    saveModalBtn.addEventListener("click", function () {
+        const questions = [];
+        const questionItems = document.querySelectorAll(".question-item");
+
+        questionItems.forEach((questionItem) => {
+            const questionText = questionItem.querySelector(".question-text").value.trim();
+            const answers = [];
+
+            const answerItems = questionItem.querySelectorAll(".answer");
+            answerItems.forEach((answerItem) => {
+                const answerText = answerItem.querySelector(".answer-input").value.trim();
+                const isCorrect = answerItem.querySelector(".answer-radio").checked;
+
+                if (answerText) {
+                    answers.push({
+                        answer_name: answerText,
+                        is_correct: isCorrect
+                    });
+                }
+            });
+
+            if (questionText && answers.length > 0) {
+                questions.push({
+                    question_text: questionText,
+                    answers: answers
+                });
+            }
+        });
+
+        const data = {
+            test_name: document.getElementById("test-name").value.trim(),
+            appointment_date: document.getElementById("appointment_date").value.trim(),
+            start_time: document.getElementById("start-time").value.trim(),
+            end_time: document.getElementById("end-time").value.trim(),
+            code: uniqueCode.textContent.trim(),
+            questions: questions
+        };
+
+        console.log("Отправляемые данные:", JSON.stringify(data, null, 2));
+        fetch("/save_test", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.error) {
+                console.error("Ошибка сервера:", result);
+                alert("Ошибка: " + result.message);
+            } else {
+                alert(result.message || "Сохранено!");
+                modal.style.display = "none";
+            }
+        })
+        .catch(error => {
+            console.error("Ошибка:", error);
+            alert("Ошибка при отправке данных!");
+        });
+    });
+});
+</script>
+</body>
+</html>
+</html>

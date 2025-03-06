@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест для ученика</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .test-container {
+            width: 80%;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .timer {
+            font-size: 1.2em;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        #progress {
+            width: 0%;
+            height: 10px;
+            background-color: #4CAF50;
+            border-radius: 5px;
+        }
+
+        .question {
+            display: none;
+        }
+
+        .question.active {
+            display: block;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 10px;
+            margin-top: 10px;
+        }
+
+        .options button {
+            padding: 10px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .options button:hover {
+            background-color: #45a049;
+        }
+
+        .options button.selected {
+            background-color: #2196F3;
+        }
+
+        .nav-buttons {
+            margin-top: 20px;
+        }
+
+        .nav-buttons button {
+            margin: 5px;
+            padding: 10px 15px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .nav-buttons button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="test-container">
+    <div class="header">
+        <h1>{{ test_name }}</h1>
+        <div class="timer">Оставшееся время: <span id="time" data-seconds="{{ duration }}">{{ duration }}</span></div>
+    </div>
+
+    <div class="progress-bar">
+        <div id="progress"></div>
+    </div>
+
+    <div id="questions-container"></div>
+
+    <div class="nav-buttons" id="nav-buttons"></div>
+
+    <button id="finish-test" onclick="submitTest()">Закончить</button>
+</div>
+
+<script>
+    const questions = JSON.parse('{{ questions|tojson|safe }}');
+
+    console.log({{ questions|tojson|safe }});
+
+    let timeLeft = 30;
+    let answeredQuestions = 0;
+    let correctAnswersCount = 0;
+
+    function submitTest() {
+    let answers = [];
+
+    document.querySelectorAll(".question").forEach(q => {
+        let selected = q.querySelector(".options button.selected");
+        if (selected) {
+            let questionId = selected.getAttribute("data-question-id");
+            let answerText = selected.textContent.trim();
+            answers.push({ question_id: questionId, answer: answerText });
+        }
+    });
+
+    console.log("Отправляемые данные:", answers);
+
+    const code = window.location.pathname.split('/').pop();
+    const url = `/results/${code}`;
+
+    fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers: answers })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data && typeof data.score !== 'undefined') {
+            window.location.href = `/results.html?score=${encodeURIComponent(data.score)}`;
+        } else {
+            alert("Ошибка: данные не содержат score");
+        }
+    })
+    .catch(error => {
+        console.error("Ошибка отправки:", error);
+        alert("Ошибка при отправке данных.");
+    });
+}
+
+
+
+        const code = window.location.pathname.split('/').pop();
+        const url = `/results/${code}`;
+
+
+
+    function loadQuestions() {
+    const container = document.getElementById("questions-container");
+    const navButtons = document.getElementById("nav-buttons");
+    container.innerHTML = "";
+    navButtons.innerHTML = "";
+
+    questions.forEach((q, index) => {
+        const questionDiv = document.createElement("div");
+        questionDiv.classList.add("question");
+        if (index === 0) questionDiv.classList.add("active");
+        questionDiv.dataset.questionId = q.question_id;
+        if (!q.question_id) {
+            console.error(`Ошибка: у вопроса ${index + 1} отсутствует question_id`);
+        }
+        questionDiv.innerHTML = `
+            <h2>${index + 1}. ${q.question}</h2>
+            <div class="options">
+                ${q.options.map((opt, i) => `
+                    <button onclick="selectAnswer(${index}, this)">${opt}</button>
+                `).join("")}
+            </div>
+        `;
+        container.appendChild(questionDiv);
+
+        const button = document.createElement("button");
+        button.textContent = index + 1;
+        button.onclick = () => showQuestion(index);
+        navButtons.appendChild(button);
+    });
+}
+
+
+    function showQuestion(index) {
+        document.querySelectorAll(".question").forEach((q, i) => {
+            q.classList.toggle("active", i === index);
+        });
+    }
+
+    function selectAnswer(index, button) {
+    const questionDivs = document.querySelectorAll(".question");
+    const buttons = questionDivs[index].querySelectorAll(".options button");
+    buttons.forEach(btn => btn.classList.remove("selected"));
+    button.classList.add("selected");
+
+    const questionId = questionDivs[index].dataset.questionId;
+    if (!questionId) {
+        console.error(`Ошибка: question_id отсутствует для вопроса ${index + 1}`);
+        return;
+    }
+
+    const question = questions.find(q => q.question_id == questionId);
+    if (!question) {
+        console.error(`Ошибка: Не найден вопрос с ID ${questionId}`);
+        return;
+    }
+
+    // Проверяем, есть ли у вопроса correct_answers
+    if (!question.correct_answers) {
+        console.error(`Ошибка: correct_answers отсутствуют у вопроса ID ${questionId}`);
+        return;
+    }
+
+    const selectedAnswerIndex = Array.from(buttons).indexOf(button);
+    if (question.correct_answers[selectedAnswerIndex]) {
+        button.classList.add('correct');
+    }
+
+    if (!questionDivs[index].classList.contains("answered")) {
+        questionDivs[index].classList.add("answered");
+        answeredQuestions++;
+        updateProgress();
+    }
+}
+
+
+
+
+
+    function updateProgress() {
+        const progress = document.getElementById("progress");
+        const finishButton = document.getElementById("finish-test");
+        let percentage = (answeredQuestions / questions.length) * 100;
+        progress.style.width = percentage + "%";
+
+        if (percentage === 100) {
+            finishButton.style.display = "block";
+        }
+    }
+
+    function formatTime(seconds) {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${h > 0 ? h + ":" : ""}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+        const timer = document.getElementById("time");
+        let timeLeft = parseInt(timer.getAttribute("data-seconds"));
+
+        const interval = setInterval(() => {
+            if (timeLeft > 0) {
+                timeLeft--;
+                timer.textContent = formatTime(timeLeft);
+            } else {
+                clearInterval(interval);
+                alert("Время вышло!");
+            }
+        }, 1000);
+    }
+
+    loadQuestions();
+    startTimer();
+</script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результаты теста</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            background-color: #fff;
+            width: 50%;
+            margin: 20px auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        h1 {
+            color: #333;
+        }
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ваш результат</h1>
+        <p class="score" id="score">Загрузка...</p>
+        <a href="/">Вернуться на главную</a>
+    </div>
+
+    <script>
+        // Функция для получения параметра из URL
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        // Получаем score из параметров URL
+        const score = getQueryParam('score');
+
+        // Если score найден, выводим его, иначе показываем сообщение об ошибке
+        if (score) {
+            document.getElementById('score').textContent = score + '%';
+        } else {
+            document.getElementById('score').textContent = 'Ошибка: Результат не найден';
+        }
+    </script>
+</body>
+</html>

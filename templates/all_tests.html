@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ваши тесты</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 20px 120px;
+        }
+
+        .test-box, .create-test {
+            width: 250px;
+            height: 150px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px;
+            padding: 10px;
+            text-align: center;
+            font-size: 18px;
+            position: relative;
+        }
+
+        .test-box {
+            background-color: #f0f0f0;
+        }
+
+        .test-box .test-title {
+            font-weight: bold;
+        }
+
+        .test-box .bottom-section {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .test-box .left-info {
+            font-size: 14px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .test-box .left-info:hover::after {
+            content: attr(data-date);
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background-color: black;
+            color: white;
+            padding: 5px;
+            font-size: 12px;
+            border-radius: 5px;
+            white-space: nowrap;
+        }
+
+        .create-test {
+            background-color: #d1e7dd;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .create-test .plus {
+            font-size: 40px;
+            font-weight: bold;
+        }
+
+        .create-test .text {
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        .button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .edit-btn {
+            background-color: #f0ad4e;
+            color: white;
+        }
+
+        .delete-btn {
+            background-color: #d9534f;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Здесь находятся ваши тесты</h1>
+
+    <div class="container">
+        {% for test in tests %}
+        <div class="test-box">
+            <div class="test-title">{{ test.test_name }}</div>
+            <div class="bottom-section">
+                <div class="left-info" data-date="{{ test.assigned_date }}">Осталось времени...</div>
+                <div class="test-code">Код: {{ test.test_id }}</div>
+            </div>
+            <div class="bottom-section">
+                <button class="button edit-btn" data-test-id="{{ test.test_id }}">Изменить</button>
+                <button class="button delete-btn">Удалить</button>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="create-test" onclick="createNewTest()">
+            <div class="plus">+</div>
+            <div class="text">Создайте свой тест</div>
+        </div>
+    </div>
+
+    <script>
+    function createNewTest() {
+        window.location.href = "/create_test";
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("click", function (event) {
+        if (event.target.classList.contains("delete-btn")) {
+            let testBox = event.target.closest(".test-box");
+            let testIdElement = testBox.querySelector(".test-code");
+
+            if (!testIdElement) {
+                console.error("Не найден элемент с testId");
+                return;
+            }
+
+            let testId = testIdElement.textContent.replace(/\D+/g, "");
+
+            if (!testId) {
+                console.error("Ошибка: test_id не найден");
+                return;
+            }
+
+            console.log("Удаляем тест с ID:", testId);
+
+            fetch(`/delete_test/${testId}`, {
+                method: "DELETE"
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    testBox.remove();
+                } else {
+                    alert("Ошибка при удалении теста: " + data.error);
+                }
+            })
+            .catch(error => console.error("Ошибка:", error));
+        }
+    });
+    });
+    </script>
+
+</body>
+</html>
